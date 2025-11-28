@@ -318,215 +318,31 @@ npm run dev
 ```sh
 npm run build
 ```
-``` ## Authentication Flow
-┌─────────────────────────────────────────────────────────┐
-│ User Interface │
-│ (Vue.js Frontend Application) │
-└────────────────────┬────────────────────────────────────┘
-│
-│ User Actions & HTTP Requests
-│
-┌────────────────────▼────────────────────────────────────┐
-│ Vue Router Layer │
-│ │
-│ ┌──────────────────────────────────────────────────┐ │
-│ │ Route Guards │ │
-│ │ • Check authentication state │ │
-│ │ • Redirect unprotected routes │ │
-│ │ • Handle navigation events │ │
-│ └──────────────┬───────────────────────────────────┘ │
-│ │ │
-│ ┌──────────────▼───────────────────────────────────┐ │
-│ │ Pinia Store │ │
-│ │ │ │
-│ │ ┌─────────────────────────────────────────────┐ │ │
-│ │ │ Auth Store │ │ │
-│ │ │ • Token management │ │ │
-│ │ │ • User state │ │ │
-│ │ │ • Persistence (localStorage) │ │ │
-│ │ └─────────────────────────────────────────────┘ │ │
-│ │ │ │
-│ │ ┌─────────────────────────────────────────────┐ │ │
-│ │ │ Verify Store │ │ │
-│ │ │ • Email verification state │ │ │
-│ │ │ • Temporary data storage │ │ │
-│ │ └─────────────────────────────────────────────┘ │ │
-│ └──────────────┬───────────────────────────────────┘ │
-└─────────────────┼───────────────────────────────────────┘
-│
-│ Axios HTTP Requests with JWT
-│
-┌─────────────────▼────────────────────────────────────┐
-│ API Communication Layer │
-│ │
-│ ┌──────────────────────────────────────────────────┐│
-│ │ Axios Interceptors ││
-│ │ ││
-│ │ Request Interceptors: ││
-│ │ • Automatic token injection ││
-│ │ • Content-type headers ││
-│ │ ││
-│ │ Response Interceptors: ││
-│ │ • 401 error handling ││
-│ │ • Automatic logout ││
-│ │ • Token refresh logic ││
-│ └──────────────┬───────────────────────────────────┘│
-│ │ │
-│ ┌──────────────▼───────────────────────────────────┐│
-│ │ Service Instances ││
-│ │ ││
-│ │ ┌─────────────────────────────────────────────┐ ││
-│ │ │ Auth API Client │ ││
-│ │ │ • BaseURL: localhost:8000/api │ ││
-│ │ │ • Login/Register/Verify endpoints │ ││
-│ │ └─────────────────────────────────────────────┘ ││
-│ │ ││
-│ │ ┌─────────────────────────────────────────────┐ ││
-│ │ │ Products API Client │ ││
-│ │ │ • BaseURL: localhost:8001/api │ ││
-│ │ │ • CRUD operations │ ││
-│ │ └─────────────────────────────────────────────┘ ││
-│ │ ││
-│ │ ┌─────────────────────────────────────────────┐ ││
-│ │ │ Inventory API Client │ ││
-│ │ │ • BaseURL: localhost:5002/api │ ││
-│ │ │ • Stock management │ ││
-│ │ └─────────────────────────────────────────────┘ ││
-│ └──────────────┬───────────────────────────────────┘│
-└─────────────────┼────────────────────────────────────┘
-│
-│ HTTP/HTTPS + JWT Tokens
-│
-┌─────────────────▼────────────────────────────────────┐
-│ Backend Microservices │
-│ │
-│ ┌─────────────────┐ ┌─────────────────┐ ┌─────────┐│
-│ │ Auth Service │ │ Products Service│ │Inventory││
-│ │ (FastAPI) │ │ (Laravel) │ │ Service ││
-│ │ Port: 8000 │ │ Port: 8001 │ │(Rust) ││
-│ │ │ │ │ │Port:5002││
-│ │ • User reg │ │ • Product CRUD │ │• Stock ││
-│ │ • JWT generation│ │ • Validation │ │ control ││
-│ │ • Email verify │ │ • Business logic│ │• Levels ││
-│ └─────────────────┘ └─────────────────┘ └─────────┘│
-└───────────────────────────────────────────────────────┘
-```
-
-# Diagrama de Casos de Uso - Sistema Distribuido de Microservicios
-
 ```mermaid
-flowchart TB
-    %% System Actors
-    A[System User]
-    B[Administrator]
-    C[External System]
-    
-    %% Use case grouping by microservice
-    subgraph MS1 [Microservice 1: Auth Service<br/>Python + FastAPI]
-        UC1[Register User]
-        UC2[Login User]
-        UC3[Logout User]
-        UC4[Validate JWT Token]
-        UC5[Refresh Token]
-        UC6[Verify Email]
-        UC7[Resend Verification Code]
-    end
-    
-    subgraph MS2 [Microservice 2: Products Service<br/>PHP + Laravel]
-        UC8[Create Product]
-        UC9[Get All Products]
-        UC10[Get Product by ID]
-        UC11[Update Product]
-        UC12[Delete Product]
-        UC13[Search Products]
-        UC14[Validate Product Data]
-    end
-    
-    subgraph MS3 [Microservice 3: Inventory Service<br/>Rust + Axum]
-        UC15[Get Inventory]
-        UC16[Get Item by ID]
-        UC17[Increase Stock]
-        UC18[Decrease Stock]
-        UC19[Update Stock Levels]
-        UC20[Check Inventory Level]
-        UC21[Manage Product Status]
-        UC22[Generate Stock Alerts]
-    end
-    
-    subgraph MS4 [Frontend Vue.js]
-        UC23[Navigate Between Views]
-        UC24[Manage User Session]
-        UC25[Handle Global State]
-        UC26[Consume Microservices APIs]
-        UC27[Handle Errors and Loading]
-        UC28[Validate Client Forms]
-    end
-    
-    %% Relationships between actors and use cases
-    A --> UC1
-    A --> UC2
-    A --> UC3
-    A --> UC6
-    A --> UC7
-    A --> UC8
-    A --> UC9
-    A --> UC10
-    A --> UC11
-    A --> UC12
-    A --> UC13
-    A --> UC15
-    A --> UC16
-    A --> UC17
-    A --> UC18
-    A --> UC19
-    A --> UC21
-    A --> UC23
-    A --> UC24
-    
-    B --> UC8
-    B --> UC11
-    B --> UC12
-    B --> UC17
-    B --> UC18
-    B --> UC19
-    B --> UC21
-    
-    C --> UC4
-    C --> UC9
-    C --> UC15
-    C --> UC20
-    
-    %% Dependencies between use cases
-    UC2 -.->|requires| UC4
-    UC8 -.->|requires| UC4
-    UC11 -.->|requires| UC4
-    UC12 -.->|requires| UC4
-    UC17 -.->|requires| UC4
-    UC18 -.->|requires| UC4
-    UC19 -.->|requires| UC4
-    
-    UC17 -.->|affects| UC20
-    UC18 -.->|affects| UC20
-    UC19 -.->|affects| UC20
-    
-    UC8 -.->|creates| UC16
-    UC12 -.->|deletes| UC16
-    
-    UC26 -.->|consumes| UC1
-    UC26 -.->|consumes| UC2
-    UC26 -.->|consumes| UC8
-    UC26 -.->|consumes| UC9
-    UC26 -.->|consumes| UC15
-    UC26 -.->|consumes| UC17
-    UC26 -.->|consumes| UC18
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant A as Auth Service
+    participant R as Router
+    participant S as Store
 
-    style A fill:#e1f5fe
-    style B fill:#f3e5f5
-    style C fill:#e8f5e8
-    style MS1 fill:#fff3e0
-    style MS2 fill:#e8eaf6
-    style MS3 fill:#e0f2f1
-    style MS4 fill:#fce4ec
+    U->>F: Access protected route
+    F->>S: Check authentication state
+    S-->>F: Token exists?
+    
+    alt Token exists
+        F->>A: Validate token (implicit via interceptor)
+        A-->>F: Valid token
+        F-->>U: Grant access to route
+    else No token or invalid
+        F->>R: Redirect to /login
+        R-->>U: Show login page
+        U->>F: Submit credentials
+        F->>A: POST /api/login
+        A-->>F: JWT Token
+        F->>S: Store token
+        F->>R: Redirect to original route
+    end
 ```
 
 Built with ❤️ using Vue and Docker
